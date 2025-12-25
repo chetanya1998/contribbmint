@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-white text-slate-900 antialiased;
+}
+
+a {
+  @apply text-accent;
+}
+
+.card {
+  @apply border border-slate-200 rounded-xl bg-white shadow-sm/10;
+}
+
+.muted {
+  @apply text-slate-500;
+}
+
+.section-title {
+  @apply text-xl font-semibold tracking-tight;
+}
