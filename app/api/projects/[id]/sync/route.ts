@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { canManageProjects } from '@/lib/rbac';
 import { prisma } from '@/lib/prisma';
 import { fetchRepoMetadata, fetchRecentIssues, fetchRecentPulls } from '@/lib/github';
-import { ContributionEventType } from '@prisma/client';
+import { ContributionEventType } from '@/types/enums';
 import { recomputeReputation } from '@/lib/insights';
 
 export async function POST(_request: Request, { params }: { params: { id: string } }) {

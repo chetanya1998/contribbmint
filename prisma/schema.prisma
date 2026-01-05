@@ -7,30 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  CONTRIBUTOR
-  MAINTAINER
-  SPONSOR
-  ADMIN
-}
+// enum Role {
+//   CONTRIBUTOR
+//   MAINTAINER
+//   SPONSOR
+//   ADMIN
+// }
 
-enum ProjectStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
+// enum ProjectStatus {
+//   PENDING
+//   APPROVED
+//   REJECTED
+// }
 
-enum MemberRole {
-  OWNER
-  MAINTAINER
-  CONTRIBUTOR
-}
+// enum MemberRole {
+//   OWNER
+//   MAINTAINER
+//   CONTRIBUTOR
+// }
 
-enum ContributionEventType {
-  PR_MERGED
-  ISSUE_CLOSED
-  REVIEW_APPROVED
-}
+// enum ContributionEventType {
+//   PR_MERGED
+//   ISSUE_CLOSED
+//   REVIEW_APPROVED
+// }
 
 model User {
   id              String   @id @default(cuid())
@@ -38,26 +38,28 @@ model User {
   email           String?  @unique
   githubUsername  String?  @unique
   avatarUrl       String?
-  role            Role     @default(CONTRIBUTOR)
+  role            String     @default("CONTRIBUTOR")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   projectMemberships ProjectMember[]
   sponsorships    Sponsorship[] @relation("SponsorshipUser")
   sessions        Session[]
   accounts        Account[]
+  walletAddress   String? // Web3 Address
+  votes           Vote[]
 }
 
 model Project {
   id              String          @id @default(cuid())
-  status          ProjectStatus   @default(PENDING)
+  status          String   @default("PENDING")
   githubOwner     String
   githubRepo      String
   githubUrl       String
   name            String
   description     String?
   primaryLanguage String?
-  topics          String[]
-  tags            String[]
+  topics          String // CSV
+  tags            String // CSV
   stars           Int      @default(0)
   forks           Int      @default(0)
   openIssuesCount Int      @default(0)
@@ -75,7 +77,7 @@ model ProjectMember {
   id            String      @id @default(cuid())
   projectId     String
   userId        String
-  roleInProject MemberRole
+  roleInProject String
   createdAt     DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id])
@@ -85,16 +87,35 @@ model ProjectMember {
 model ContributionEvent {
   id                  String                 @id @default(cuid())
   projectId           String
-  eventType           ContributionEventType
+  eventType           String
   actorGithubUsername String
   targetId            String
   title               String
   url                 String
   occurredAt          DateTime
-  metadata            Json?
+  metadata            String?
   createdAt           DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id])
+  
+  // Web3 / Minting Fields
+  mintStatus      String   @default("PENDING_VOTE") // PENDING_VOTE, READY_TO_MINT, MINTED
+  tokenId         String?
+  transactionHash String?
+  votes           Vote[]
+}
+
+model Vote {
+  id                 String            @id @default(cuid())
+  contributionEventId String
+  userId             String
+  score              Int               @default(0) // 1-5 rating
+  createdAt          DateTime          @default(now())
+
+  contributionEvent  ContributionEvent @relation(fields: [contributionEventId], references: [id])
+  user               User              @relation(fields: [userId], references: [id])
+
+  @@unique([contributionEventId, userId]) // One vote per user per contribution
 }
 
 model ProjectReputation {
@@ -124,12 +145,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

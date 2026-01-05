@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
-import { ContributionEventType, Project, Role } from '@prisma/client';
+import { Project } from '@prisma/client';
+import { Role, ContributionEventType } from '@/types/enums';
 import { scoreEvent } from './scoring';
 import { differenceInDays } from 'date-fns';
 
@@ -76,7 +77,7 @@ export async function recomputeReputation(projectId: string) {
   const events = await prisma.contributionEvent.findMany({ where: { projectId } });
   const totals: Record<string, number> = {};
   events.forEach((event) => {
-    const points = scoreEvent(event.eventType);
+    const points = scoreEvent(event.eventType as any);
     totals[event.actorGithubUsername] = (totals[event.actorGithubUsername] || 0) + points;
   });
 

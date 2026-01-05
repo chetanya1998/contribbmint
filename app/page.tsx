@@ -1,59 +1,56 @@
-import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ProjectCard } from '@/components/projects/project-card';
-import { FilterBar } from '@/components/projects/filter-bar';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { buildProjectInsights } from '@/lib/insights';
+import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions as any);
-  const role = (session?.user as any)?.role;
-  const projects = await prisma.project.findMany({ where: { status: 'APPROVED' }, take: 6 });
-
-  const projectsWithInsights = await Promise.all(
-    projects.map(async (project) => {
-      const insights = await buildProjectInsights(project, role);
-      return { project, snippet: insights.snippet };
-    })
-  );
+  const session = await auth();
+  const user = session?.user as any;
+  const role = user?.role;
+  const projects = await prisma.project.findMany({ where: { status: 'APPROVED' }, take: 9 });
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="card p-6 bg-gradient-to-r from-slate-50 to-white border-slate-100">
-        <h1 className="text-3xl font-semibold text-slate-900">ContribMint</h1>
-        <p className="text-slate-600 mt-2 max-w-2xl">
-          A minimal, role-aware view of open-source activity. Discover projects, track contributions, and align insights for contributors, maintainers, sponsors, and admins.
+    <div className="flex flex-col gap-10 py-10">
+      <section className="text-center space-y-4 max-w-3xl mx-auto px-4">
+        <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-transparent bg-clip-text h-[1.2em]">
+          Contribute. Mint. Own.
+        </h1>
+        <p className="text-xl text-slate-400">
+          The first platform that turns your open source contributions into verifiable, tradeable NFTs.
         </p>
-        <div className="mt-4 flex gap-3">
-          <Link href="/projects" className="px-4 py-2 rounded-full bg-accent text-white text-sm font-medium">Browse projects</Link>
-          <Link href="/dashboard" className="px-4 py-2 rounded-full border border-slate-200 text-sm font-medium">View dashboard</Link>
+        <div className="flex justify-center gap-4 pt-4">
+          <a href="/projects" className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-slate-200 transition-colors">
+            Explore Projects
+          </a>
+          <a href="https://github.com/chetanya/ContribMint" target="_blank" className="px-8 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors border border-white/10">
+            View on GitHub
+          </a>
         </div>
-      </div>
+      </section>
 
-      <FilterBar />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projectsWithInsights.map(({ project, snippet }) => (
-          <ProjectCard
-            key={project.id}
-            id={project.id}
-            name={project.name}
-            description={project.description}
-            githubOwner={project.githubOwner}
-            githubRepo={project.githubRepo}
-            tags={project.tags}
-            stars={project.stars}
-            forks={project.forks}
-            openIssuesCount={project.openIssuesCount}
-            lastPushedAt={project.lastPushedAt?.toISOString()}
-            role={role}
-            status={project.status}
-            insight={snippet}
-          />
-        ))}
-      </div>
+      <section>
+        <div className="flex items-center justify-between mb-6 px-4">
+          <h2 className="text-2xl font-bold text-white">Featured Projects</h2>
+          <a href="/projects" className="text-sm text-purple-400 hover:text-purple-300">View all →</a>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              id={project.id}
+              name={project.name}
+              description={project.description || ''}
+              stars={project.stars}
+              forks={project.forks}
+              owner={project.githubOwner}
+              repo={project.githubRepo}
+              language={project.primaryLanguage || 'Unknown'}
+              tags={project.tags ? project.tags.split(',') : []}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

@@ -22,8 +22,8 @@ export default async function ImportPage() {
         githubUrl: repoUrl,
         name: repoUrl.split('/').slice(-1)[0],
         description: 'Imported project pending sync',
-        topics: [],
-        tags: [],
+        topics: '',
+        tags: '',
         lastSyncedAt: null,
       },
     });

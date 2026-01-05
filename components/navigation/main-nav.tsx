@@ -4,17 +4,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { RoleBadge } from '@/components/role-badge';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const links = [
   { href: '/projects', label: 'Projects' },
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/dashboard/contributions', label: 'Contributions' },
   { href: '/import', label: 'Import Project' },
 ];
 
 export function MainNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const role = (session?.user as any)?.role as string | undefined;
+  const role = (session?.user as any)?.role as any;
 
   return (
     <header className="border-b border-slate-200 bg-white/70 backdrop-blur">
@@ -36,6 +38,7 @@ export function MainNav() {
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm">
+          <ConnectButton showBalance={false} accountStatus="avatar" />
           {session ? (
             <div className="flex items-center gap-3">
               <RoleBadge role={role} />
@@ -46,6 +49,7 @@ export function MainNav() {
                 Sign out
               </button>
             </div>
+
           ) : (
             <Link href="/login" className="px-3 py-1 rounded-full border border-slate-200 hover:bg-slate-100">
               Sign in

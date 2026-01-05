@@ -1,4 +1,4 @@
-import { ContributionEventType } from '@prisma/client';
+import { ContributionEventType } from '@/types/enums';
 
 export function scoreEvent(eventType: ContributionEventType) {
   switch (eventType) {

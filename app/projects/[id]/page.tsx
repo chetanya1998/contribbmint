@@ -25,7 +25,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         stars={project.stars}
         forks={project.forks}
         primaryLanguage={project.primaryLanguage}
-        topics={project.topics}
+        topics={project.topics ? project.topics.split(',') : []}
         status={project.status}
         role={role}
         actions={<PrimaryAction role={role} projectId={project.id} githubUrl={project.githubUrl} />}

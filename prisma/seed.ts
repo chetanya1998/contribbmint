@@ -1,100 +1,115 @@
-import { PrismaClient, Role, ProjectStatus, ContributionEventType, MemberRole } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { Role, ProjectStatus, ContributionEventType, MemberRole } from '../types/enums';
 import { addDays, subDays } from 'date-fns';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.contributionEvent.deleteMany();
-  await prisma.projectReputation.deleteMany();
-  await prisma.sponsorship.deleteMany();
-  await prisma.projectMember.deleteMany();
-  await prisma.project.deleteMany();
-  await prisma.user.deleteMany();
+  console.log('Seeding database...');
 
-  const users = await prisma.user.createMany({
-    data: Array.from({ length: 20 }).map((_, i) => ({
-      name: `User ${i + 1}`,
-      email: `user${i + 1}@example.com`,
-      githubUsername: `user${i + 1}`,
-      avatarUrl: '',
-      role: i === 0 ? Role.ADMIN : i < 3 ? Role.MAINTAINER : i < 6 ? Role.SPONSOR : Role.CONTRIBUTOR,
-    })),
+  // 1. Create Users
+  const user1 = await prisma.user.upsert({
+    where: { email: 'contributor@demo.com' },
+    update: {},
+    create: {
+      email: 'contributor@demo.com',
+      name: 'Alice Contributor',
+      githubUsername: 'alice-dev',
+      role: 'CONTRIBUTOR',
+      walletAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', // Standard Hardhat Account #1
+    },
   });
 
-  const userRecords = await prisma.user.findMany();
+  const user2 = await prisma.user.upsert({
+    where: { email: 'maintainer@demo.com' },
+    update: {},
+    create: {
+      email: 'maintainer@demo.com',
+      name: 'Bob Maintainer',
+      githubUsername: 'bob-maintainer',
+      role: 'MAINTAINER',
+    },
+  });
 
-  const projects = await Promise.all(
-    Array.from({ length: 10 }).map((_, i) =>
-      prisma.project.create({
-        data: {
-          name: `Project ${i + 1}`,
-          githubOwner: 'open-source',
-          githubRepo: `project-${i + 1}`,
-          githubUrl: `https://github.com/open-source/project-${i + 1}`,
-          description: 'Sample project for ContribMint demo.',
-          primaryLanguage: ['TypeScript', 'Python', 'Go'][i % 3],
-          topics: ['open-source', 'demo', i % 2 ? 'good-first-issue' : 'contrib'],
-          tags: ['open-source', 'demo'],
-          stars: 100 + i * 20,
-          forks: 20 + i * 3,
-          openIssuesCount: 5 + i,
-          status: i < 8 ? ProjectStatus.APPROVED : ProjectStatus.PENDING,
-          lastPushedAt: subDays(new Date(), i),
-          lastSyncedAt: subDays(new Date(), i),
-        },
-      })
-    )
-  );
+  // 2. Create Projects
+  const projects = [];
+  for (let i = 0; i < 6; i++) {
+    const p = await prisma.project.create({
+      data: {
+        name: `Open Source Tool ${i + 1}`,
+        githubOwner: 'open-source',
+        githubRepo: `project-${i + 1}`,
+        githubUrl: `https://github.com/open-source/project-${i + 1}`,
+        description: 'Sample project for ContribMint demo.',
+        primaryLanguage: ['TypeScript', 'Python', 'Go'][i % 3],
+        topics: ['open-source', 'demo', i % 2 ? 'good-first-issue' : 'contrib'].join(','),
+        tags: ['open-source', 'demo'].join(','),
+        stars: 100 + i * 20,
+        forks: 20 + i * 3,
+        openIssuesCount: 5 + i,
+        status: ProjectStatus.APPROVED,
+        lastSyncedAt: new Date(),
+      },
+    });
+    projects.push(p);
+  }
 
-  for (const project of projects) {
-    const maintainer = userRecords.find((u) => u.role === Role.MAINTAINER);
-    if (maintainer) {
-      await prisma.projectMember.create({
-        data: {
-          projectId: project.id,
-          userId: maintainer.id,
-          roleInProject: MemberRole.MAINTAINER,
-        },
-      });
+  // 3. Create Interactions (Memberships, Events)
+  await prisma.projectMember.create({
+    data: {
+      projectId: projects[0].id,
+      userId: user2.id,
+      roleInProject: 'MAINTAINER',
+    },
+  });
+
+  // Recent Contributions
+  const events = [
+    {
+      projectId: projects[0].id,
+      eventType: ContributionEventType.PR_MERGED,
+      actorGithubUsername: 'alice-dev',
+      targetId: '101',
+      title: 'Fix responsive layout bug',
+      url: 'https://github.com/example/repo/pull/101',
+      occurredAt: subDays(new Date(), 2),
+      metadata: { linesAdded: 50, linesDeleted: 20 },
+      mintStatus: 'PENDING_VOTE'
+    },
+    {
+      projectId: projects[1].id,
+      eventType: ContributionEventType.PR_MERGED,
+      actorGithubUsername: 'alice-dev',
+      targetId: '205',
+      title: 'Add new API endpoint',
+      url: 'https://github.com/example/repo/pull/205',
+      occurredAt: subDays(new Date(), 5),
+      metadata: { linesAdded: 120, linesDeleted: 5 },
+      mintStatus: 'READY_TO_MINT'
     }
+  ];
 
-    const events = Array.from({ length: 50 }).map((_, idx) => ({
-      projectId: project.id,
-      eventType: idx % 3 === 0 ? ContributionEventType.PR_MERGED : idx % 3 === 1 ? ContributionEventType.ISSUE_CLOSED : ContributionEventType.REVIEW_APPROVED,
-      actorGithubUsername: userRecords[(idx + project.stars) % userRecords.length].githubUsername || 'user1',
-      targetId: String(idx + 1),
-      title: `${project.name} event #${idx + 1}`,
-      url: `${project.githubUrl}/pull/${idx + 1}`,
-      occurredAt: subDays(new Date(), idx % 30),
-      metadata: {},
-    }));
-    await prisma.contributionEvent.createMany({ data: events });
+  for (const e of events) {
+    await prisma.contributionEvent.create({
+      data: {
+        ...e,
+        metadata: JSON.stringify(e.metadata)
+      }
+    })
   }
 
-  const reputations = await prisma.contributionEvent.groupBy({
-    by: ['projectId', 'actorGithubUsername'],
-    _sum: { id: true },
-  });
+  // Aggregate scores (Dummy logic fix for type error)
+  // Actual aggregation logic isn't needed for seed, just creating data.
 
-  await prisma.projectReputation.createMany({
-    data: reputations.map((rep) => ({
-      projectId: rep.projectId,
-      githubUsername: rep.actorGithubUsername,
-      pointsTotal: Math.floor(Math.random() * 120),
-    })),
-  });
-
-  const sponsor = userRecords.find((u) => u.role === Role.SPONSOR);
-  if (sponsor) {
-    await prisma.sponsorship.create({ data: { projectId: projects[0].id, sponsorUserId: sponsor.id } });
-  }
+  console.log('Seeding finished.');
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
   });

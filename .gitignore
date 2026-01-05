@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+.env
+.DS_Store
+smart-contracts/typechain-types
+smart-contracts/artifacts
+smart-contracts/cache
+coverage
+.docusaurus
+.cache
+tmp
+out
+build
+.vercel
