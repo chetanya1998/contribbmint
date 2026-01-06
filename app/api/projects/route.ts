@@ -30,8 +30,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions as any);
-  if (!(session?.user as any)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = (await getServerSession(authOptions as any)) as any;
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();
