@@ -32,4 +32,9 @@ export const authOptions = {
   },
 };
 
-export const { handlers: authHandlers, auth, signIn, signOut } = NextAuth(authOptions as any);
+import { getServerSession } from 'next-auth';
+
+// Helper for NextAuth v4 to mimic v5 'auth()' syntax
+export const auth = () => getServerSession(authOptions);
+export const handlers = NextAuth(authOptions as any);
+
