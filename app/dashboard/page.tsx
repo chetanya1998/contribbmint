@@ -40,8 +40,14 @@ function StatWidget({ label, value, icon, color }: any) {
 }
 
 async function ContributorDashboard({ username }: { username?: string | null }) {
-  const contributions = await prisma.contributionEvent.findMany({ where: { actorGithubUsername: username || '' }, take: 5, orderBy: { occurredAt: 'desc' } });
-  const reputations = await prisma.projectReputation.findMany({ where: { githubUsername: username || '' }, include: { project: true } });
+  let contributions: any[] = [];
+  let reputations: any[] = [];
+  try {
+    contributions = await prisma.contributionEvent.findMany({ where: { actorGithubUsername: username || '' }, take: 5, orderBy: { occurredAt: 'desc' } });
+    reputations = await prisma.projectReputation.findMany({ where: { githubUsername: username || '' }, include: { project: true } });
+  } catch (e) {
+    console.error("Dashboard data fetch failed:", e);
+  }
 
   const totalRep = reputations.reduce((sum, r) => sum + r.pointsTotal, 0);
 

@@ -8,18 +8,23 @@ export default async function ContributionsPage() {
     const session = await auth();
     if (!session?.user) return <div className="text-white">Please log in</div>;
 
-    const contributions = await prisma.contributionEvent.findMany({
-        where: {
-            projectId: { not: undefined }, // Just filter valid ones
-        },
-        include: {
-            project: true,
-            votes: { // Include my vote
-                where: { userId: session.user.id }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+    let contributions: any[] = [];
+    try {
+        contributions = await prisma.contributionEvent.findMany({
+            where: {
+                projectId: { not: undefined }, // Just filter valid ones
+            },
+            include: {
+                project: true,
+                votes: { // Include my vote
+                    where: { userId: session.user.id }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (e) {
+        console.error("Contributions fetch failed:", e);
+    }
 
     return (
         <div className="space-y-8">

@@ -8,7 +8,13 @@ export default async function HomePage() {
   const session = await auth();
   const user = session?.user as any;
   const role = user?.role;
-  const projects = await prisma.project.findMany({ where: { status: 'APPROVED' }, take: 9 });
+  let projects = [];
+  try {
+    projects = await prisma.project.findMany({ where: { status: 'APPROVED' }, take: 9 });
+  } catch (error) {
+    console.error("Failed to fetch projects:", error);
+    // Fallback to empty array to allow page render
+  }
 
   return (
     <div className="flex flex-col gap-10 py-10">
