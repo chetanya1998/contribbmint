@@ -40,22 +40,39 @@ export default async function HomePage() {
           <h2 className="text-2xl font-bold text-white">Featured Projects</h2>
           <a href="/projects" className="text-sm text-purple-400 hover:text-purple-300">View all →</a>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              id={project.id}
-              name={project.name}
-              description={project.description || ''}
-              stars={project.stars}
-              forks={project.forks}
-              owner={project.githubOwner}
-              repo={project.githubRepo}
-              language={project.primaryLanguage || 'Unknown'}
-              tags={project.tags ? project.tags.split(',') : []}
-            />
-          ))}
-        </div>
+
+        {projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                id={project.id}
+                name={project.name}
+                description={project.description || ''}
+                stars={project.stars}
+                forks={project.forks}
+                owner={project.githubOwner}
+                repo={project.githubRepo}
+                language={project.primaryLanguage || 'Unknown'}
+                tags={project.tags ? project.tags.split(',') : []}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mx-4 p-12 rounded-2xl glass-card text-center border-dashed border-2 border-white/10">
+            <div className="mb-4 inline-block p-4 rounded-full bg-white/5">
+              <span className="text-4xl">🚀</span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">No Projects Found</h3>
+            <p className="text-slate-400 max-w-md mx-auto mb-6">
+              It seems the database is empty or connecting for the first time.
+              Be the first to perform an import!
+            </p>
+            <a href="/import" className="inline-flex items-center justify-center px-6 py-2 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors">
+              Import a Repository
+            </a>
+          </div>
+        )}
       </section>
     </div>
   );
