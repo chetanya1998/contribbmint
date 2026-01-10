@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProjectsPage({ searchParams }: { searchParams: { search?: string, filter?: string } }) {
+export default async function ProjectsPage({ searchParams }: { searchParams: { search?: string, filter?: string, tab?: string } }) {
   const session = await getServerSession(authOptions as any);
   const role = (session?.user as any)?.role;
   const search = searchParams?.search || '';
@@ -27,17 +27,25 @@ export default async function ProjectsPage({ searchParams }: { searchParams: { s
   const tab = searchParams?.tab || 'my-projects';
 
   let projects: any[] = [];
-  if (tab === 'discover') {
-    // Ingest/Fetch from GitHub
-    const { getTrendingProjects } = await import('@/lib/github-ingest');
-    projects = await getTrendingProjects();
-  } else {
-    // Fetch from DB
-    projects = await prisma.project.findMany({
-      where,
-      take: 50,
-      orderBy: { stars: 'desc' }
-    });
+  let error: string | null = null;
+
+  try {
+    if (tab === 'discover') {
+      // Ingest/Fetch from GitHub
+      const { getTrendingProjects } = await import('@/lib/github-ingest');
+      projects = await getTrendingProjects();
+    } else {
+      // Fetch from DB
+      projects = await prisma.project.findMany({
+        where,
+        take: 50,
+        orderBy: { stars: 'desc' }
+      });
+    }
+  } catch (e: any) {
+    console.error('Projects fetch error:', e);
+    error = e.message || 'Failed to load projects';
+    projects = [];
   }
 
   return (
@@ -88,9 +96,16 @@ export default async function ProjectsPage({ searchParams }: { searchParams: { s
           />
         ))}
       </div>
-      {projects.length === 0 && (
+      {projects.length === 0 && !error && (
         <div className="text-center py-20">
-          <p className="text-slate-500">No projects found matching your criteria.</p>
+          <p className="text-slate-400">No projects found matching your criteria.</p>
+        </div>
+      )}
+      {error && (
+        <div className="glass-card p-8 text-center border-2 border-red-500/20">
+          <p className="text-xl font-bold text-red-400 mb-2">⚠️ Error Loading Projects</p>
+          <p className="text-slate-400">{error}</p>
+          <p className="text-sm text-slate-500 mt-4">Please check database connection or try again later.</p>
         </div>
       )}
     </div>
