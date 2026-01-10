@@ -13,6 +13,10 @@ const links = [
   { href: '/import', label: 'Import Project' },
 ];
 
+const adminLinks = [
+  { href: '/simulate', label: 'Simulate', adminOnly: true },
+];
+
 export function MainNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -31,6 +35,15 @@ export function MainNav() {
                 key={link.href}
                 href={link.href}
                 className={`px-4 py-2 rounded-lg transition-all duration-200 ${pathname.startsWith(link.href) ? 'text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {role === 'ADMIN' && adminLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 border border-primary/30 ${pathname.startsWith(link.href) ? 'text-white font-bold bg-primary/20' : 'text-primary hover:text-white hover:bg-primary/10'}`}
               >
                 {link.label}
               </Link>
