@@ -1,115 +1,73 @@
 import { PrismaClient } from '@prisma/client';
-import { Role, ProjectStatus, ContributionEventType, MemberRole } from '../types/enums';
-import { addDays, subDays } from 'date-fns';
+import { fetchMultipleYears, transformToProject } from '../lib/gsoc-importer';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('🌱 Starting database seed...');
 
-  // 1. Create Users
-  const user1 = await prisma.user.upsert({
-    where: { email: 'contributor@demo.com' },
-    update: {},
-    create: {
-      email: 'contributor@demo.com',
-      name: 'Alice Contributor',
-      githubUsername: 'alice-dev',
-      role: 'CONTRIBUTOR',
-      walletAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', // Standard Hardhat Account #1
-    },
-  });
-
-  const user2 = await prisma.user.upsert({
-    where: { email: 'maintainer@demo.com' },
-    update: {},
-    create: {
-      email: 'maintainer@demo.com',
-      name: 'Bob Maintainer',
-      githubUsername: 'bob-maintainer',
-      role: 'MAINTAINER',
-    },
-  });
-
-  // 2. Create Projects
-  const projects = [];
-  for (let i = 0; i < 6; i++) {
-    const p = await prisma.project.create({
-      data: {
-        name: `Open Source Tool ${i + 1}`,
-        githubOwner: 'open-source',
-        githubRepo: `project-${i + 1}`,
-        githubUrl: `https://github.com/open-source/project-${i + 1}`,
-        description: 'Sample project for ContribMint demo.',
-        primaryLanguage: ['TypeScript', 'Python', 'Go'][i % 3],
-        topics: ['open-source', 'demo', i % 2 ? 'good-first-issue' : 'contrib'].join(','),
-        tags: ['open-source', 'demo'].join(','),
-        stars: 100 + i * 20,
-        forks: 20 + i * 3,
-        openIssuesCount: 5 + i,
-        status: ProjectStatus.APPROVED,
-        lastSyncedAt: new Date(),
-      },
-    });
-    projects.push(p);
+  // Check if projects already exist
+  const existingCount = await prisma.project.count();
+  if (existingCount > 0) {
+    console.log(`✅ Database already has ${existingCount} projects. Skipping seed.`);
+    return;
   }
 
-  // 3. Create Interactions (Memberships, Events)
-  await prisma.projectMember.create({
-    data: {
-      projectId: projects[0].id,
-      userId: user2.id,
-      roleInProject: 'MAINTAINER',
-    },
-  });
+  console.log('📥 Fetching GSOC organizations from API...');
 
-  // Recent Contributions
-  const events = [
-    {
-      projectId: projects[0].id,
-      eventType: ContributionEventType.PR_MERGED,
-      actorGithubUsername: 'alice-dev',
-      targetId: '101',
-      title: 'Fix responsive layout bug',
-      url: 'https://github.com/example/repo/pull/101',
-      occurredAt: subDays(new Date(), 2),
-      metadata: { linesAdded: 50, linesDeleted: 20 },
-      mintStatus: 'PENDING_VOTE'
-    },
-    {
-      projectId: projects[1].id,
-      eventType: ContributionEventType.PR_MERGED,
-      actorGithubUsername: 'alice-dev',
-      targetId: '205',
-      title: 'Add new API endpoint',
-      url: 'https://github.com/example/repo/pull/205',
-      occurredAt: subDays(new Date(), 5),
-      metadata: { linesAdded: 120, linesDeleted: 5 },
-      mintStatus: 'READY_TO_MINT'
-    }
-  ];
+  // Fetch organizations from recent years
+  const projects = await fetchMultipleYears([2024, 2023, 2022]);
 
-  for (const e of events) {
-    await prisma.contributionEvent.create({
-      data: {
-        ...e,
-        metadata: JSON.stringify(e.metadata)
+  console.log(`Found ${projects.length} unique GSOC organizations`);
+
+  // Import projects to database
+  let imported = 0;
+  let failed = 0;
+
+  for (const project of projects) {
+    try {
+      await prisma.project.create({
+        data: {
+          name: project.name,
+          description: project.description,
+          githubUrl: project.githubUrl || `https://github.com/${project.githubOwner}/${project.githubRepo}`,
+          githubOwner: project.githubOwner || 'gsoc',
+          githubRepo: project.githubRepo || project.name.toLowerCase().replace(/\s+/g, '-'),
+          tags: project.tags || '',
+          topics: project.topics || '',
+          primaryLanguage: project.primaryLanguage,
+          stars: project.stars,
+          forks: project.forks,
+          openIssuesCount: project.openIssuesCount,
+          status: project.status,
+          source: project.source,
+          gsocYear: project.gsocYear,
+          officialWebsite: project.officialWebsite,
+          chatUrl: project.chatUrl,
+          documentationUrl: project.documentationUrl,
+        }
+      });
+      imported++;
+
+      if (imported % 10 === 0) {
+        console.log(`  ✓ Imported ${imported} projects...`);
       }
-    })
+    } catch (error: any) {
+      failed++;
+      console.error(`  ✗ Failed to import ${project.name}: ${error.message}`);
+    }
   }
 
-  // Aggregate scores (Dummy logic fix for type error)
-  // Actual aggregation logic isn't needed for seed, just creating data.
-
-  console.log('Seeding finished.');
+  console.log(`\n✅ Seed complete!`);
+  console.log(`   Imported: ${imported} projects`);
+  console.log(`   Failed: ${failed} projects`);
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error('❌ Seed failed:', e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

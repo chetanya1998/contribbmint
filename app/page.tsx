@@ -88,8 +88,22 @@ export default async function HomePage() {
     nftsMinted: 0,
     activeVotes: 0
   };
+  let autoImporting = false;
 
   try {
+    // Check if database is empty and trigger auto-import
+    const projectCount = await prisma.project.count({ where: { status: 'APPROVED' } });
+
+    if (projectCount === 0) {
+      console.log('No projects found, triggering auto-import...');
+      autoImporting = true;
+
+      // Trigger async import (don't wait for it)
+      fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auto-import`, {
+        method: 'POST'
+      }).catch(err => console.error('Auto-import trigger failed:', err));
+    }
+
     projects = await prisma.project.findMany({
       where: { status: 'APPROVED' },
       take: 6,
@@ -97,7 +111,7 @@ export default async function HomePage() {
     });
 
     // Fetch real stats
-    const [projectCount, userCount, contributionCount, voteCount] = await Promise.all([
+    const [totalProjectCount, userCount, contributionCount, voteCount] = await Promise.all([
       prisma.project.count({ where: { status: 'APPROVED' } }),
       prisma.user.count(),
       prisma.contributionEvent.count({ where: { mintStatus: 'MINTED' } }),
@@ -211,12 +225,21 @@ export default async function HomePage() {
         ) : (
           <div className="mx-4 p-12 rounded-2xl glass-card text-center border-dashed border-2 border-white/10">
             <div className="mb-4 inline-block p-4 rounded-full bg-white/5">
-              <span className="text-4xl">🚀</span>
+              <span className="text-4xl">{autoImporting ? '⏳' : '🚀'}</span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">GSOC Projects Coming Soon</h3>
+            <h3 className="text-xl font-bold text-white mb-2">
+              {autoImporting ? 'Importing GSOC Projects...' : 'No Projects Yet'}
+            </h3>
             <p className="text-slate-400 max-w-md mx-auto mb-6">
-              We're importing real Google Summer of Code organizations. Check back soon!
+              {autoImporting
+                ? 'We\'re fetching real Google Summer of Code organizations. Refresh in a moment!'
+                : 'Projects will be imported automatically. Refresh the page to see them.'}
             </p>
+            {!autoImporting && (
+              <a href="/admin/import-gsoc" className="inline-flex items-center justify-center px-6 py-2 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors">
+                Manual Import
+              </a>
+            )}
           </div>
         )}
       </section>
