@@ -18,19 +18,19 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10 py-10">
-      <section className="text-center space-y-4 max-w-3xl mx-auto px-4">
-        <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-transparent bg-clip-text h-[1.2em]">
-          Contribute. Mint. Own.
+      <section className="text-center space-y-6 max-w-4xl mx-auto px-4 mt-8">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
+          Contribute. Mint. <span className="text-primary">Own.</span>
         </h1>
-        <p className="text-xl text-slate-400">
-          The first platform that turns your open source contributions into verifiable, tradeable NFTs.
+        <p className="text-xl md:text-2xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
+          The first marketplace for verifiable open source contributions. Turn your PRs into tradeable assets.
         </p>
-        <div className="flex justify-center gap-4 pt-4">
-          <a href="/projects" className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-slate-200 transition-colors">
+        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
+          <a href="/projects" className="btn-primary text-lg px-8 py-4">
             Explore Projects
           </a>
-          <a href="https://github.com/chetanya/ContribMint" target="_blank" className="px-8 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors border border-white/10">
-            View on GitHub
+          <a href="/import" className="btn-secondary text-lg px-8 py-4">
+            Import Repository
           </a>
         </div>
       </section>

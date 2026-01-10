@@ -19,18 +19,18 @@ export function MainNav() {
   const role = (session?.user as any)?.role as any;
 
   return (
-    <header className="border-b border-slate-200 bg-white/70 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-white/5 bg-[#141415]/80 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="font-semibold text-lg text-slate-900">
-            ContribMint
+          <Link href="/" className="font-bold text-xl text-white tracking-tight flex items-center gap-2">
+            <span className="text-primary">✦</span> ContribMint
           </Link>
           <nav className="hidden sm:flex items-center gap-2 text-sm">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1 rounded-full hover:bg-slate-100 ${pathname.startsWith(link.href) ? 'bg-slate-100 font-medium' : ''}`}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 ${pathname.startsWith(link.href) ? 'text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
               >
                 {link.label}
               </Link>
