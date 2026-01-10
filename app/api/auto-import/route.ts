@@ -9,6 +9,11 @@ export const maxDuration = 60; // Allow up to 60s for import
  * Auto-import GSOC projects if database is empty
  * Called automatically by the app on first load
  */
+// Allow GET requests for manual triggering via browser/curl
+export async function GET(req: NextRequest) {
+    return POST(req);
+}
+
 export async function POST(req: NextRequest) {
     try {
         // Check if projects already exist
