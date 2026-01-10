@@ -66,6 +66,15 @@ model Project {
   openIssuesCount Int      @default(0)
   lastPushedAt    DateTime?
   lastSyncedAt    DateTime?
+  githubId        String?
+  
+  // GSOC Integration Fields
+  gsocYear        Int?
+  officialWebsite String?
+  chatUrl         String?
+  documentationUrl String?
+  contributionGuide String? @db.Text
+  source          String? @default("MANUAL") // "GSOC" or "MANUAL"
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   members         ProjectMember[]
