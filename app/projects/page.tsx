@@ -24,11 +24,21 @@ export default async function ProjectsPage({ searchParams }: { searchParams: { s
     where.topics = { contains: 'good-first-issue' };
   }
 
-  const projects = await prisma.project.findMany({
-    where,
-    take: 50,
-    orderBy: { stars: 'desc' }
-  });
+  const tab = searchParams?.tab || 'my-projects';
+
+  let projects: any[] = [];
+  if (tab === 'discover') {
+    // Ingest/Fetch from GitHub
+    const { getTrendingProjects } = await import('@/lib/github-ingest');
+    projects = await getTrendingProjects();
+  } else {
+    // Fetch from DB
+    projects = await prisma.project.findMany({
+      where,
+      take: 50,
+      orderBy: { stars: 'desc' }
+    });
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -45,6 +55,21 @@ export default async function ProjectsPage({ searchParams }: { searchParams: { s
             </Link>
           )}
         </div>
+      </div>
+
+      <div className="flex gap-4 mb-8 border-b border-white/10 pb-4">
+        <Link
+          href="/projects?tab=my-projects"
+          className={`px-4 py-2 rounded-lg font-medium transition ${tab !== 'discover' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}`}
+        >
+          Tracked Projects
+        </Link>
+        <Link
+          href="/projects?tab=discover"
+          className={`px-4 py-2 rounded-lg font-medium transition ${tab === 'discover' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}`}
+        >
+          Discover (GitHub)
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
