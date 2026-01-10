@@ -31,15 +31,15 @@ export default async function ImportPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto card p-6 flex flex-col gap-4">
+    <div className="max-w-2xl mx-auto glass-card p-8 flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Import a GitHub repository</h1>
-        <p className="text-sm text-slate-600">Create a pending project by pasting a GitHub URL. Admin approval required before listing.</p>
+        <h1 className="text-3xl font-bold text-white">Import Repository</h1>
+        <p className="text-sm text-slate-400 mt-2">Paste a GitHub URL to add a project. Admin approval required before listing.</p>
       </div>
-      <form action={importAction} className="flex flex-col gap-3">
-        <label className="text-sm font-medium">GitHub repo URL</label>
-        <input name="repoUrl" required placeholder="https://github.com/org/repo" className="px-3 py-2 border rounded-lg" />
-        <button type="submit" className="px-4 py-2 rounded-full bg-accent text-white text-sm font-medium w-fit">Import project</button>
+      <form action={importAction} className="flex flex-col gap-4">
+        <label className="text-sm font-bold text-white">GitHub Repository URL</label>
+        <input name="repoUrl" required placeholder="https://github.com/org/repo" className="px-4 py-3 border border-white/10 rounded-lg bg-white/5 text-white placeholder-slate-500 focus:border-primary focus:outline-none transition-colors" />
+        <button type="submit" className="btn-primary w-fit">Import Project</button>
       </form>
     </div>
   );

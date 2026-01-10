@@ -31,11 +31,11 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         actions={<PrimaryAction role={role} projectId={project.id} githubUrl={project.githubUrl} />}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <section className="card p-5 col-span-2">
-          <h2 className="section-title mb-2">Overview</h2>
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">{project.description}</p>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-600">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section className="glass-card p-6 col-span-2">
+          <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
+          <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{project.description}</p>
+          <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-slate-400">
             <span>Primary language: {project.primaryLanguage || 'n/a'}</span>
             <span>Open issues: {project.openIssuesCount}</span>
             <span>Last pushed: {project.lastPushedAt?.toLocaleDateString() || 'n/a'}</span>
@@ -45,32 +45,32 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         <ProjectInsightsPanel title="Role-based insights" metrics={insights.metrics} cta={<InsightsCTA role={role} projectId={project.id} githubUrl={project.githubUrl} />} />
       </div>
 
-      <div className="card p-5">
-        <h2 className="section-title mb-2">Contributors</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Top Contributors</h2>
         <div className="space-y-2 text-sm">
           {project.reputations.slice(0, 10).map((rep) => (
-            <div key={rep.id} className="flex items-center justify-between border-b last:border-0 py-2 border-slate-100">
-              <span className="font-medium">{rep.githubUsername}</span>
-              <span className="text-slate-600">{rep.pointsTotal} pts</span>
+            <div key={rep.id} className="flex items-center justify-between border-b last:border-0 py-3 border-white/5">
+              <span className="font-medium text-white">{rep.githubUsername}</span>
+              <span className="text-slate-400 font-mono">{rep.pointsTotal} pts</span>
             </div>
           ))}
-          {project.reputations.length === 0 && <p className="text-slate-600">No contributors recorded yet.</p>}
+          {project.reputations.length === 0 && <p className="text-slate-400">No contributors recorded yet.</p>}
         </div>
       </div>
 
-      <div className="card p-5">
-        <h2 className="section-title mb-2">Activity (latest 30 events)</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
         <div className="space-y-2 text-sm">
           {project.events.map((event) => (
-            <div key={event.id} className="flex items-center justify-between border-b last:border-0 py-2 border-slate-100">
+            <div key={event.id} className="flex items-center justify-between border-b last:border-0 py-3 border-white/5">
               <div>
-                <p className="font-medium">{event.title}</p>
-                <p className="text-slate-500">{event.eventType} • {event.actorGithubUsername}</p>
+                <p className="font-medium text-white">{event.title}</p>
+                <p className="text-slate-400 text-xs">{event.eventType} • {event.actorGithubUsername}</p>
               </div>
-              <span className="text-slate-500">{event.occurredAt.toLocaleDateString()}</span>
+              <span className="text-slate-500 text-sm">{event.occurredAt.toLocaleDateString()}</span>
             </div>
           ))}
-          {project.events.length === 0 && <p className="text-slate-600">No activity yet.</p>}
+          {project.events.length === 0 && <p className="text-slate-400">No activity yet.</p>}
         </div>
       </div>
     </div>
@@ -80,15 +80,15 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
 function PrimaryAction({ role, projectId, githubUrl }: { role?: string; projectId: string; githubUrl: string }) {
   if (!role || role === 'CONTRIBUTOR') {
     return (
-      <Link href={githubUrl} className="px-4 py-2 rounded-full bg-accent text-white text-sm font-medium" target="_blank">
-        View issues on GitHub
+      <Link href={githubUrl} className="btn-primary" target="_blank">
+        View on GitHub
       </Link>
     );
   }
   if (role === 'MAINTAINER') {
     return (
       <form action={`/api/projects/${projectId}/sync`} method="post">
-        <button className="px-4 py-2 rounded-full border border-slate-200 text-sm font-medium">Sync now</button>
+        <button className="btn-secondary">Sync Repository</button>
       </form>
     );
   }

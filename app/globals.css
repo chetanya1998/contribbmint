@@ -74,6 +74,11 @@
     @apply bg-[#1b1b1d] border border-white/5 shadow-lg rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-white/20;
   }
 
+  /* Alias for legacy code */
+  .card {
+    @apply bg-[#1b1b1d] border border-white/5 shadow-lg rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-white/20;
+  }
+
   /* Primary Button: Solid blue, rounded-lg, bold */
   .btn-primary {
     @apply bg-primary hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-colors;
